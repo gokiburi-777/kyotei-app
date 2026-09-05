@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>競艇 3連単絞り込み＆収支管理</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      text-align: center;
+      margin: 0 0 4px 0;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: #666;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    /* 各艇の条件設定リスト */
+    .boat-condition-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .boat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #ced4da;
+    }
+
+    .boat-badge {
+      font-weight: bold;
+      font-size: 0.85rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      color: #fff;
+    }
+
+    .b-1 { background-color: #ffffff; color: #333; border: 1px solid #333; }
+    .b-2 { background-color: #212529; }
+    .b-3 { background-color: #dc3545; }
+    .b-4 { background-color: #0d6efd; }
+    .b-5 { background-color: #ffc107; color: #000; }
+    .b-6 { background-color: #198754; }
+
+    select, input[type="number"], input[type="text"] {
+      font-size: 0.85rem;
+      padding: 4px 6px;
+      border-radius: 4px;
+      border: 1px solid #ced4da;
+      background-color: #fff;
+    }
+
+    select {
+      width: 140px;
+    }
+
+    /* 結果エリア */
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+
+    .count-badge {
+      background: #0d6efd;
+      color: white;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    .result-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      max-height: 180px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .result-item {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      padding: 6px 2px;
+      text-align: center;
+      font-family: monospace;
+      font-size: 0.95rem;
+      font-weight: bold;
+    }
+
+    .empty-msg {
+      grid-column: span 3;
+      text-align: center;
+      color: #888;
+      font-size: 0.85rem;
+      padding: 16px 0;
+    }
+
+    .reset-btn {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    /* 収支管理エリア */
+    .btn-add {
+      background: #198754;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .race-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    /* 1行で収まるレース行スタイル */
+    .race-item {
+      background: #fff;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      padding: 6px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .race-name-input {
+      width: 45px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .num-input {
+      width: 65px;
+      text-align: right;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    .race-profit {
+      font-size: 0.8rem;
+      font-weight: bold;
+      width: 75px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .btn-del {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    /* トータル収支表示 */
+    .total-box {
+      background: #e9ecef;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 8px;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      margin-bottom: 3px;
+    }
+
+    .total-row.main {
+      font-size: 1rem;
+      font-weight: bold;
+      margin-top: 6px;
+      padding-top: 4px;
+      border-top: 1px solid #bbb;
+    }
+
+    .plus { color: #0d6efd; }
+    .minus { color: #dc3545; }
+
+    .clear-storage-btn {
+      width: 100%;
+      background: transparent;
+      color: #888;
+      border: 1px dashed #ccc;
+      padding: 6px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      margin-top: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>競艇 3連単絞り込み＆収支管理</h1>
+  <div class="subtitle">120通りからの抽出とレース収支計算</div>
+
+  <!-- 1. 各艇の着順条件 -->
+  <div class="card">
+    <div class="section-title">各艇の着順条件</div>
+    <div class="boat-condition-list" id="boatConditions">
+      <!-- JavaScriptで動的生成 -->
+    </div>
+  </div>
+
+  <!-- 2. 抽出結果表示 -->
+  <div class="card">
+    <div class="result-header">
+      <span class="section-title" style="margin:0;">抽出結果</span>
+      <span class="count-badge" id="countBadge">120 / 120 件</span>
+    </div>
+
+    <div class="result-list" id="resultList">
+      <!-- 抽出データ表示 -->
+    </div>
+
+    <button class="reset-btn" id="resetBtn">条件リセット</button>
+  </div>
+
+  <!-- 3. レース収支管理 -->
+  <div class="card">
+    <div class="section-title">
+      <span>レース別 収支管理</span>
+      <button class="btn-add" id="addRaceBtn">＋ レース追加</button>
+    </div>
+
+    <div class="race-list" id="raceList">
+      <!-- レース入力行（1行形式）が追加される場所 -->
+    </div>
+
+    <!-- 合計表示エリア -->
+    <div class="total-box">
+      <div class="total-row">
+        <span>合計投資額:</span>
+        <span id="totalInvestment">0 円</span>
+      </div>
+      <div class="total-row">
+        <span>合計回収額:</span>
+        <span id="totalReturn">0 円</span>
+      </div>
+      <div class="total-row main">
+        <span>トータル収支:</span>
+        <span id="totalProfit" class="plus">0 円</span>
+      </div>
+    </div>
+
+    <button class="clear-storage-btn" id="clearStorageBtn">収支データをすべてクリア</button>
+  </div>
+</div>
+
+<script>
+  // 120通りの3連単生成 (6×5×4)
+  function generateAll120() {
+    const combos = [];
+    for (let i = 1; i <= 6; i++) {
+      for (let j = 1; j <= 6; j++) {
+        for (let k = 1; k <= 6; k++) {
+          if (i !== j && j !== k && i !== k) {
+            combos.push([i, j, k]);
+          }
+        }
+      }
+    }
+    return combos;
+  }
+
+  const allCombinations = generateAll120();
+
+  // 各艇の着順設定UI初期化
+  const boatConditionsContainer = document.getElementById('boatConditions');
+  for (let i = 1; i <= 6; i++) {
+    const div = document.createElement('div');
+    div.className = 'boat-row';
+    div.innerHTML = `
+      <span class="boat-badge b-${i}">${i}号艇</span>
+      <select class="boat-select" data-boat="${i}">
+        <option value="any">指定なし</option>
+        <option value="1">1着</option>
+        <option value="2">2着</option>
+        <option value="3">3着</option>
+        <option value="1or2">1着or2着</option>
+        <option value="2or3">2着or3着</option>
+        <option value="1or2or3">1着or2着or3着</option>
+        <option value="out">着外(4着以下)</option>
+      </select>
+    `;
+    boatConditionsContainer.appendChild(div);
+  }
+
+  // イベントリスナーの設定
+  document.querySelectorAll('.boat-select').forEach(select => {
+    select.addEventListener('change', filterAndRender);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    document.querySelectorAll('.boat-select').forEach(s => s.value = 'any');
+    filterAndRender();
+  });
+
+  // メインの抽出ロジック
+  function filterAndRender() {
+    const boatConds = {};
+    document.querySelectorAll('.boat-select').forEach(select => {
+      boatConds[select.getAttribute('data-boat')] = select.value;
+    });
+
+    const matched = allCombinations.filter(combo => {
+      for (let boat = 1; boat <= 6; boat++) {
+        const cond = boatConds[boat];
+        if (cond === 'any') continue;
+
+        const pos1 = combo[0] === boat;
+        const pos2 = combo[1] === boat;
+        const pos3 = combo[2] === boat;
+
+        if (cond === '1' && !pos1) return false;
+        if (cond === '2' && !pos2) return false;
+        if (cond === '3' && !pos3) return false;
+        if (cond === '1or2' && !(pos1 || pos2)) return false;
+        if (cond === '2or3' && !(pos2 || pos3)) return false;
+        if (cond === '1or2or3' && !(pos1 || pos2 || pos3)) return false;
+        if (cond === 'out' && (pos1 || pos2 || pos3)) return false;
+      }
+      return true;
+    });
+
+    const resultList = document.getElementById('resultList');
+    const countBadge = document.getElementById('countBadge');
+    
+    resultList.innerHTML = '';
+    countBadge.textContent = `${matched.length} / 120 件`;
+
+    if (matched.length === 0) {
+      resultList.innerHTML = `<div class="empty-msg">条件に合う買い目がありません</div>`;
+      return;
+    }
+
+    matched.forEach(combo => {
+      const item = document.createElement('div');
+      item.className = 'result-item';
+      item.textContent = combo.join('-');
+      resultList.appendChild(item);
+    });
+  }
+
+  // ----------------------------------------------------
+  // レース収支管理機能（localStorage対応）
+  // ----------------------------------------------------
+  const raceList = document.getElementById('raceList');
+  const addRaceBtn = document.getElementById('addRaceBtn');
+  const clearStorageBtn = document.getElementById('clearStorageBtn');
+  const STORAGE_KEY = 'kyotei_race_data';
+
+  addRaceBtn.addEventListener('click', () => {
+    const currentRows = document.querySelectorAll('.race-item').length;
+    addRaceRow(`${currentRows + 1}R`, '', '');
+    saveData();
+  });
+
+  clearStorageBtn.addEventListener('click', () => {
+    if (confirm('保存されている収支データをすべて削除しますか？')) {
+      localStorage.removeItem(STORAGE_KEY);
+      raceList.innerHTML = '';
+      addRaceRow('1R', '', '');
+      calculateTotal();
+    }
+  });
+
+  function addRaceRow(name = '', invest = '', ret = '') {
+    const item = document.createElement('div');
+    item.className = 'race-item';
+    item.innerHTML = `
+      <input type="text" class="race-name-input" value="${name}" placeholder="1R">
+      <input type="number" class="num-input input-invest" value="${invest}" placeholder="投資" min="0" step="100">
+      <input type="number" class="num-input input-return" value="${ret}" placeholder="回収" min="0" step="10">
+      <span class="race-profit plus">0円</span>
+      <button class="btn-del">✕</button>
+    `;
+
+    // 削除ボタン
+    item.querySelector('.btn-del').addEventListener('click', () => {
+      item.remove();
+      calculateTotal();
+      saveData();
+    });
+
+    // 入力変更時の自動集計＆保存
+    item.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', () => {
+        calculateRaceProfit(item);
+        calculateTotal();
+        saveData();
+      });
+    });
+
+    raceList.appendChild(item);
+    calculateRaceProfit(item);
+  }
+
+  // 単一レースの損益計算
+  function calculateRaceProfit(raceItem) {
+    const invest = Number(raceItem.querySelector('.input-invest').value) || 0;
+    const ret = Number(raceItem.querySelector('.input-return').value) || 0;
+    const profit = ret - invest;
+
+    const profitEl = raceItem.querySelector('.race-profit');
+    profitEl.textContent = `${profit >= 0 ? '+' : ''}${profit.toLocaleString()}円`;
+    
+    if (profit >= 0) {
+      profitEl.className = 'race-profit plus';
+    } else {
+      profitEl.className = 'race-profit minus';
+    }
+  }
+
+  // トータル集計計算
+  function calculateTotal() {
+    let totalInvest = 0;
+    let totalReturn = 0;
+
+    document.querySelectorAll('.race-item').forEach(item => {
+      const invest = Number(item.querySelector('.input-invest').value) || 0;
+      const ret = Number(item.querySelector('.input-return').value) || 0;
+      totalInvest += invest;
+      totalReturn += ret;
+    });
+
+    const totalProfit = totalReturn - totalInvest;
+
+    document.getElementById('totalInvestment').textContent = `${totalInvest.toLocaleString()} 円`;
+    document.getElementById('totalReturn').textContent = `${totalReturn.toLocaleString()} 円`;
+    
+    const profitEl = document.getElementById('totalProfit');
+    profitEl.textContent = `${totalProfit >= 0 ? '+' : ''}${totalProfit.toLocaleString()} 円`;
+
+    if (totalProfit >= 0) {
+      profitEl.className = 'plus';
+    } else {
+      profitEl.className = 'minus';
+    }
+  }
+
+  // localStorageへのデータ保存
+  function saveData() {
+    const data = [];
+    document.querySelectorAll('.race-item').forEach(item => {
+      data.push({
+        name: item.querySelector('.race-name-input').value,
+        invest: item.querySelector('.input-invest').value,
+        ret: item.querySelector('.input-return').value
+      });
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  // localStorageからのデータ読み込み
+  function loadData() {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      const data = JSON.parse(savedData);
+      if (data.length > 0) {
+        raceList.innerHTML = '';
+        data.forEach(row => {
+          addRaceRow(row.name, row.invest, row.ret);
+        });
+        calculateTotal();
+        return;
+      }
+    }
+    // 保存データがない場合の初期行
+    addRaceRow('1R', '', '');
+    calculateTotal();
+  }
+
+  // 初回表示処理
+  filterAndRender();
+  loadData();
+</script>
+
+</body>
+</html>
