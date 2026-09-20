@@ -2,10 +2,10 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 from bs4 import BeautifulSoup
-import re  # 先頭でインポート
+import re
 
 app = Flask(__name__)
-CORS(app)  # 全ドメインからのアクセスを許可
+CORS(app)
 
 @app.route('/api/odds', methods=['GET'])
 def get_odds():
@@ -15,7 +15,6 @@ def get_odds():
     if not jyo or not race:
         return jsonify({'success': False, 'error': 'jyo and race are required'}), 400
 
-    # 場コードを2桁（例: 1 -> 01）に補正
     jyo_formatted = str(jyo).zfill(2)
     target_url = f"https://www.boatrace.jp/owpc/pc/race/odds3t?rno={race}&jlc={jyo_formatted}"
     
@@ -30,38 +29,36 @@ def get_odds():
         soup = BeautifulSoup(res.text, 'html.parser')
         odds_data = {}
 
-        # 方法1: oddsPoint クラスのセルから直接探索
-        odds_tds = soup.find_all('td', class_='oddsPoint')
-        for td in odds_tds:
+        # 方式1: oddsPoint クラスから抽出
+        for td in soup.select('td.oddsPoint'):
             val = td.get_text(strip=True)
-            # td要素のクラス名（例: p3t_123）から組番を取得
-            td_classes = " ".join(td.get('class', []))
-            match = re.search(r'p3t_(\d)(\d)(\d)', td_classes)
-            if match:
-                key = f"{match.group(1)}-{match.group(2)}-{match.group(3)}"
-                odds_data[key] = val if val else '---'
-            else:
-                # 親の tr 要素のクラス名からも探す
-                parent_tr = td.find_parent('tr')
-                if parent_tr:
-                    tr_classes = " ".join(parent_tr.get('class', []))
-                    match_tr = re.search(r'p3t_(\d)(\d)(\d)', tr_classes)
-                    if match_tr:
-                        key = f"{match_tr.group(1)}-{match_tr.group(2)}-{match_tr.group(3)}"
-                        odds_data[key] = val if val else '---'
+            if not val or val == '---':
+                continue
+            
+            # クラス名から p3t_123 形式の組番を探す（td要素および親要素）
+            classes = " ".join(td.get('class', []))
+            parent = td.find_parent('tr')
+            if parent:
+                classes += " " + " ".join(parent.get('class', []))
+            
+            m = re.search(r'p3t_(\d)(\d)(\d)', classes)
+            if m:
+                key = f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+                odds_data[key] = val
 
-        # 方法2: テーブル行のテキストからフォールバック解析
+        # 方式2: 万が一上記で取れない場合、テーブル内のテキスト（1-2-3 12.3 形式）から広域抽出
         if not odds_data:
-            rows = soup.find_all('tr')
-            for row in rows:
-                text = row.get_text(" ", strip=True)
-                # 「1-2-3 12.3」のようなパターンを検出
-                m = re.search(r'(\d)-(\d)-(\d)\s+([\d\.]+)', text)
-                if m:
-                    key = f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
-                    odds_data[key] = m.group(4)
+            tables = soup.find_all('table')
+            for table in tables:
+                for row in table.find_all('tr'):
+                    text = row.get_text(" ", strip=True)
+                    # 組番とオッズ値のパターンにマッチング
+                    matches = re.findall(r'(\d)-(\d)-(\d)\s+([\d\.]+)', text)
+                    for m in matches:
+                        key = f"{m[0]}-{m[1]}-{m[2]}"
+                        odds_data[key] = m[3]
 
-        return jsonify({'success': True, 'odds': odds_data})
+        return jsonify({'success': True, 'odds': odds_data, 'count': len(odds_data)})
 
     except Exception as e:
         print(f"Error fetching odds: {e}")
