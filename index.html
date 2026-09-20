@@ -30,15 +30,23 @@
     }
 
     h1 {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       text-align: center;
       margin: 0 0 4px 0;
     }
 
     .subtitle {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: #666;
       text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 12px;
       margin-bottom: 16px;
     }
 
@@ -51,19 +59,44 @@
       justify-content: space-between;
     }
 
-    .card {
-      background: #f8f9fa;
-      border: 1px solid #e9ecef;
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 16px;
+    /* レース選択エリア */
+    .odds-select-group {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .odds-select-group select {
+      flex: 1;
+      padding: 6px;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      border: 1px solid #ced4da;
+      background: #fff;
+    }
+
+    .btn-odds-update {
+      width: 100%;
+      background: #0d6efd;
+      color: white;
+      border: none;
+      padding: 8px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .btn-odds-update:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
     }
 
     /* 各艇の条件設定リスト */
     .boat-condition-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
 
     .boat-row {
@@ -81,15 +114,15 @@
       font-size: 0.85rem;
       padding: 3px 8px;
       border-radius: 4px;
-      color: #fff;
     }
 
+    /* 艇色スタイル */
     .b-1 { background-color: #ffffff; color: #333; border: 1px solid #333; }
-    .b-2 { background-color: #212529; }
-    .b-3 { background-color: #dc3545; }
-    .b-4 { background-color: #0d6efd; }
+    .b-2 { background-color: #212529; color: #fff; }
+    .b-3 { background-color: #dc3545; color: #fff; }
+    .b-4 { background-color: #0d6efd; color: #fff; }
     .b-5 { background-color: #ffc107; color: #000; }
-    .b-6 { background-color: #198754; }
+    .b-6 { background-color: #198754; color: #fff; }
 
     select, input[type="number"], input[type="text"] {
       font-size: 0.85rem;
@@ -99,11 +132,11 @@
       background-color: #fff;
     }
 
-    select {
-      width: 140px;
+    .boat-select {
+      width: 150px;
     }
 
-    /* 結果エリア */
+    /* 抽出結果エリア */
     .result-header {
       display: flex;
       justify-content: space-between;
@@ -124,26 +157,62 @@
 
     .result-list {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 8px;
-      max-height: 180px;
+      max-height: 220px;
       overflow-y: auto;
       padding-right: 2px;
     }
 
-    .result-item {
-      background: #f8f9fa;
+    /* 3連単カラーボックス＋オッズ表示アイテム */
+    .sanrentan-item {
+      background: #fff;
       border: 1px solid #dee2e6;
       border-radius: 6px;
-      padding: 6px 2px;
-      text-align: center;
-      font-family: monospace;
-      font-size: 0.95rem;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.1s;
+    }
+
+    .sanrentan-item:active {
+      background: #e2e6ea;
+    }
+
+    .sanrentan-boxes {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .box-num {
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
       font-weight: bold;
+      border-radius: 3px;
+    }
+
+    .hyphen {
+      font-size: 0.7rem;
+      color: #888;
+    }
+
+    .odds-val {
+      font-size: 0.75rem;
+      color: #dc3545;
+      font-weight: bold;
+      margin-left: 4px;
     }
 
     .empty-msg {
-      grid-column: span 3;
+      grid-column: span 2;
       text-align: center;
       color: #888;
       font-size: 0.85rem;
@@ -152,7 +221,7 @@
 
     .reset-btn {
       width: 100%;
-      padding: 10px;
+      padding: 8px;
       margin-top: 10px;
       background: #6c757d;
       color: white;
@@ -163,7 +232,39 @@
       cursor: pointer;
     }
 
-    /* 収支管理エリア */
+    /* 買い目スペース */
+    .keep-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .btn-clear {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .keep-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      min-height: 50px;
+      max-height: 180px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px dashed #ced4da;
+      border-radius: 6px;
+      padding: 8px;
+    }
+
+    /* 収支管理 */
     .btn-add {
       background: #198754;
       color: white;
@@ -182,7 +283,6 @@
       margin-bottom: 12px;
     }
 
-    /* 1行で収まるレース行スタイル */
     .race-item {
       background: #fff;
       border: 1px solid #ced4da;
@@ -232,7 +332,6 @@
       cursor: pointer;
     }
 
-    /* トータル収支表示 */
     .total-box {
       background: #e9ecef;
       border-radius: 8px;
@@ -275,20 +374,46 @@
 
 <div class="container">
   <h1>競艇 3連単絞り込み＆収支管理</h1>
-  <div class="subtitle">120通りからの抽出とレース収支計算</div>
+  <div class="subtitle">120通りからの抽出・オッズ確認・買い目キープ</div>
+
+  <!-- 0. レース選択＆オッズ更新 -->
+  <div class="card">
+    <div class="section-title">オッズ自動取得設定</div>
+    <div class="odds-select-group">
+      <select id="jyoSelect">
+        <option value="">ボートレース場を選択</option>
+        <option value="01">桐生</option><option value="02">戸田</option><option value="03">江戸川</option>
+        <option value="04">平和島</option><option value="05">多摩川</option><option value="06">浜名湖</option>
+        <option value="07">蒲郡</option><option value="08">常滑</option><option value="09">津</option>
+        <option value="10">三国</option><option value="11">びわこ</option><option value="12">住之江</option>
+        <option value="13">尼崎</option><option value="14">鳴門</option><option value="15">丸亀</option>
+        <option value="16">児島</option><option value="17">宮島</option><option value="18">徳山</option>
+        <option value="19">下関</option><option value="20">若松</option><option value="21">芦屋</option>
+        <option value="22">福岡</option><option value="23">唐津</option><option value="24">大村</option>
+      </select>
+      <select id="raceSelect">
+        <option value="">レース数を選択</option>
+        <option value="1">1R</option><option value="2">2R</option><option value="3">3R</option>
+        <option value="4">4R</option><option value="5">5R</option><option value="6">6R</option>
+        <option value="7">7R</option><option value="8">8R</option><option value="9">9R</option>
+        <option value="10">10R</option><option value="11">11R</option><option value="12">12R</option>
+      </select>
+    </div>
+    <button class="btn-odds-update" id="updateOddsBtn">オッズ更新</button>
+  </div>
 
   <!-- 1. 各艇の着順条件 -->
   <div class="card">
-    <div class="section-title">各艇の着順条件</div>
+    <div class="section-title">各艇の着順絞り込み</div>
     <div class="boat-condition-list" id="boatConditions">
-      <!-- JavaScriptで動的生成 -->
+      <!-- JS生成 -->
     </div>
   </div>
 
   <!-- 2. 抽出結果表示 -->
   <div class="card">
     <div class="result-header">
-      <span class="section-title" style="margin:0;">抽出結果</span>
+      <span class="section-title" style="margin:0;">抽出結果 <span style="font-size:0.75rem; font-weight:normal; color:#666;">(タップでキープ)</span></span>
       <span class="count-badge" id="countBadge">120 / 120 件</span>
     </div>
 
@@ -299,7 +424,18 @@
     <button class="reset-btn" id="resetBtn">条件リセット</button>
   </div>
 
-  <!-- 3. レース収支管理 -->
+  <!-- 3. 買い目キープスペース -->
+  <div class="card">
+    <div class="keep-header">
+      <span class="section-title" style="margin:0;">買い目スペース</span>
+      <button class="btn-clear" id="clearKeepBtn">クリア</button>
+    </div>
+    <div class="keep-list" id="keepList">
+      <!-- タップで溜まるエリア -->
+    </div>
+  </div>
+
+  <!-- 4. レース収支管理 -->
   <div class="card">
     <div class="section-title">
       <span>レース別 収支管理</span>
@@ -307,10 +443,9 @@
     </div>
 
     <div class="race-list" id="raceList">
-      <!-- レース入力行（1行形式）が追加される場所 -->
+      <!-- レース入力行 -->
     </div>
 
-    <!-- 合計表示エリア -->
     <div class="total-box">
       <div class="total-row">
         <span>合計投資額:</span>
@@ -331,7 +466,14 @@
 </div>
 
 <script>
-  // 120通りの3連単生成 (6×5×4)
+  // グローバル状態
+  let oddsData = {}; // { "1-2-3": "12.5", ... }
+  let keepSet = new Set(); // キープした買い目
+
+  // ★後でご自身のRenderサーバーURLに書き換えてください（末尾の / は無し）
+  const RENDER_SERVER_URL = 'https://YOUR-APP-NAME.onrender.com';
+
+  // 120通りの3連単生成
   function generateAll120() {
     const combos = [];
     for (let i = 1; i <= 6; i++) {
@@ -345,10 +487,9 @@
     }
     return combos;
   }
-
   const allCombinations = generateAll120();
 
-  // 各艇の着順設定UI初期化
+  // 条件選択UI初期化
   const boatConditionsContainer = document.getElementById('boatConditions');
   for (let i = 1; i <= 6; i++) {
     const div = document.createElement('div');
@@ -360,16 +501,18 @@
         <option value="1">1着</option>
         <option value="2">2着</option>
         <option value="3">3着</option>
-        <option value="1or2">1着or2着</option>
-        <option value="2or3">2着or3着</option>
-        <option value="1or2or3">1着or2着or3着</option>
-        <option value="out">着外(4着以下)</option>
+        <option value="3in">3着以内</option>
+        <option value="out">4着以下(着外)</option>
+        <option value="1or2">1着または2着</option>
+        <option value="2or3">2着または3着</option>
+        <option value="2out">2着以下</option>
+        <option value="3out">3着以下</option>
       </select>
     `;
     boatConditionsContainer.appendChild(div);
   }
 
-  // イベントリスナーの設定
+  // イベントリスナー
   document.querySelectorAll('.boat-select').forEach(select => {
     select.addEventListener('change', filterAndRender);
   });
@@ -379,7 +522,14 @@
     filterAndRender();
   });
 
-  // メインの抽出ロジック
+  document.getElementById('clearKeepBtn').addEventListener('click', () => {
+    keepSet.clear();
+    renderKeepList();
+  });
+
+  document.getElementById('updateOddsBtn').addEventListener('click', fetchOdds);
+
+  // 絞り込み判定＆描画
   function filterAndRender() {
     const boatConds = {};
     document.querySelectorAll('.boat-select').forEach(select => {
@@ -398,10 +548,12 @@
         if (cond === '1' && !pos1) return false;
         if (cond === '2' && !pos2) return false;
         if (cond === '3' && !pos3) return false;
+        if (cond === '3in' && !(pos1 || pos2 || pos3)) return false;
+        if (cond === 'out' && (pos1 || pos2 || pos3)) return false;
         if (cond === '1or2' && !(pos1 || pos2)) return false;
         if (cond === '2or3' && !(pos2 || pos3)) return false;
-        if (cond === '1or2or3' && !(pos1 || pos2 || pos3)) return false;
-        if (cond === 'out' && (pos1 || pos2 || pos3)) return false;
+        if (cond === '2out' && pos1) return false;
+        if (cond === '3out' && (pos1 || pos2)) return false;
       }
       return true;
     });
@@ -418,15 +570,94 @@
     }
 
     matched.forEach(combo => {
-      const item = document.createElement('div');
-      item.className = 'result-item';
-      item.textContent = combo.join('-');
+      const key = combo.join('-');
+      const item = createSanrentanElement(combo, oddsData[key] || '---');
+      item.addEventListener('click', () => {
+        keepSet.add(key);
+        renderKeepList();
+      });
       resultList.appendChild(item);
     });
   }
 
+  // 3連単カラーボックス表示要素の生成
+  function createSanrentanElement(combo, oddsVal) {
+    const div = document.createElement('div');
+    div.className = 'sanrentan-item';
+    div.innerHTML = `
+      <div class="sanrentan-boxes">
+        <span class="box-num b-${combo[0]}">${combo[0]}</span>
+        <span class="hyphen">-</span>
+        <span class="box-num b-${combo[1]}">${combo[1]}</span>
+        <span class="hyphen">-</span>
+        <span class="box-num b-${combo[2]}">${combo[2]}</span>
+      </div>
+      <span class="odds-val">${oddsVal}</span>
+    `;
+    return div;
+  }
+
+  // 買い目スペースの再描画
+  function renderKeepList() {
+    const keepList = document.getElementById('keepList');
+    keepList.innerHTML = '';
+    
+    if (keepSet.size === 0) {
+      keepList.innerHTML = `<div class="empty-msg" style="grid-column:span 2;">タップして買い目を追加</div>`;
+      return;
+    }
+
+    keepSet.forEach(key => {
+      const combo = key.split('-').map(Number);
+      const item = createSanrentanElement(combo, oddsData[key] || '---');
+      item.addEventListener('click', () => {
+        keepSet.delete(key);
+        renderKeepList();
+      });
+      keepList.appendChild(item);
+    });
+  }
+
+  // Renderサーバー経由でのオッズ自動取得処理
+  async function fetchOdds() {
+    const jyo = document.getElementById('jyoSelect').value;
+    const race = document.getElementById('raceSelect').value;
+    const btn = document.getElementById('updateOddsBtn');
+
+    if (!jyo || !race) {
+      alert('レース場とレース数を選択してください。');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'オッズ取得中...';
+
+    // RenderバックエンドAPI呼び出しURL
+    const apiUrl = `${RENDER_SERVER_URL}/api/odds?jyo=${jyo}&race=${race}`;
+
+    try {
+      const response = await fetch(apiUrl);
+      if (!response.ok) throw new Error('通信エラー');
+      
+      const data = await response.json();
+      
+      if (data.success && data.odds) {
+        oddsData = data.odds; // 取得したオッズデータオブジェクトをそのまま格納
+        filterAndRender();
+        renderKeepList();
+      } else {
+        alert('オッズデータの取得に失敗しました。');
+      }
+    } catch (e) {
+      alert('オッズの自動取得に失敗しました。Pythonサーバーの起動状態やURL設定を確認してください。');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'オッズ更新';
+    }
+  }
+
   // ----------------------------------------------------
-  // レース収支管理機能（localStorage対応）
+  // 収支管理機能（localStorage）
   // ----------------------------------------------------
   const raceList = document.getElementById('raceList');
   const addRaceBtn = document.getElementById('addRaceBtn');
@@ -459,14 +690,12 @@
       <button class="btn-del">✕</button>
     `;
 
-    // 削除ボタン
     item.querySelector('.btn-del').addEventListener('click', () => {
       item.remove();
       calculateTotal();
       saveData();
     });
 
-    // 入力変更時の自動集計＆保存
     item.querySelectorAll('input').forEach(input => {
       input.addEventListener('input', () => {
         calculateRaceProfit(item);
@@ -479,7 +708,6 @@
     calculateRaceProfit(item);
   }
 
-  // 単一レースの損益計算
   function calculateRaceProfit(raceItem) {
     const invest = Number(raceItem.querySelector('.input-invest').value) || 0;
     const ret = Number(raceItem.querySelector('.input-return').value) || 0;
@@ -487,24 +715,16 @@
 
     const profitEl = raceItem.querySelector('.race-profit');
     profitEl.textContent = `${profit >= 0 ? '+' : ''}${profit.toLocaleString()}円`;
-    
-    if (profit >= 0) {
-      profitEl.className = 'race-profit plus';
-    } else {
-      profitEl.className = 'race-profit minus';
-    }
+    profitEl.className = profit >= 0 ? 'race-profit plus' : 'race-profit minus';
   }
 
-  // トータル集計計算
   function calculateTotal() {
     let totalInvest = 0;
     let totalReturn = 0;
 
     document.querySelectorAll('.race-item').forEach(item => {
-      const invest = Number(item.querySelector('.input-invest').value) || 0;
-      const ret = Number(item.querySelector('.input-return').value) || 0;
-      totalInvest += invest;
-      totalReturn += ret;
+      totalInvest += Number(item.querySelector('.input-invest').value) || 0;
+      totalReturn += Number(item.querySelector('.input-return').value) || 0;
     });
 
     const totalProfit = totalReturn - totalInvest;
@@ -514,15 +734,9 @@
     
     const profitEl = document.getElementById('totalProfit');
     profitEl.textContent = `${totalProfit >= 0 ? '+' : ''}${totalProfit.toLocaleString()} 円`;
-
-    if (totalProfit >= 0) {
-      profitEl.className = 'plus';
-    } else {
-      profitEl.className = 'minus';
-    }
+    profitEl.className = totalProfit >= 0 ? 'plus' : 'minus';
   }
 
-  // localStorageへのデータ保存
   function saveData() {
     const data = [];
     document.querySelectorAll('.race-item').forEach(item => {
@@ -535,27 +749,24 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 
-  // localStorageからのデータ読み込み
   function loadData() {
     const savedData = localStorage.getItem(STORAGE_KEY);
     if (savedData) {
       const data = JSON.parse(savedData);
       if (data.length > 0) {
         raceList.innerHTML = '';
-        data.forEach(row => {
-          addRaceRow(row.name, row.invest, row.ret);
-        });
+        data.forEach(row => addRaceRow(row.name, row.invest, row.ret));
         calculateTotal();
         return;
       }
     }
-    // 保存データがない場合の初期行
     addRaceRow('1R', '', '');
     calculateTotal();
   }
 
-  // 初回表示処理
+  // 初期化
   filterAndRender();
+  renderKeepList();
   loadData();
 </script>
 
