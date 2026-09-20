@@ -171,7 +171,7 @@
     .result-list {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
+      gap: 6px;
       max-height: 220px;
       overflow-y: auto;
       padding-right: 2px;
@@ -182,13 +182,14 @@
       background: #fff;
       border: 1px solid #dee2e6;
       border-radius: 6px;
-      padding: 6px;
+      padding: 4px 5px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
       user-select: none;
       transition: background-color 0.1s;
+      min-width: 0;
     }
 
     .sanrentan-item:active {
@@ -198,30 +199,31 @@
     .sanrentan-boxes {
       display: flex;
       align-items: center;
-      gap: 2px;
+      gap: 1px;
     }
 
     .box-num {
-      width: 20px;
-      height: 20px;
+      width: 17px;
+      height: 17px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: bold;
       border-radius: 3px;
     }
 
     .hyphen {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       color: #888;
     }
 
     .odds-val {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: #dc3545;
       font-weight: bold;
-      margin-left: 4px;
+      margin-left: 2px;
+      white-space: nowrap;
     }
 
     .empty-msg {
@@ -267,14 +269,14 @@
     .keep-list {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
+      gap: 6px;
       min-height: 50px;
       max-height: 180px;
       overflow-y: auto;
       background: #fff;
       border: 1px dashed #ced4da;
       border-radius: 6px;
-      padding: 8px;
+      padding: 6px;
     }
 
     .keep-del-btn {
@@ -287,7 +289,7 @@
       align-items: center;
       justify-content: center;
       font-size: 0.5rem;
-      margin-left: 4px;
+      margin-left: 2px;
       flex-shrink: 0;
     }
 
@@ -452,7 +454,7 @@
     <button class="reset-btn" id="resetBtn">条件リセット</button>
   </div>
 
-  <!-- 3. 買い目キープスペース -->
+  <!-- 3. 買い目スペース -->
   <div class="card">
     <div class="keep-header">
       <span class="section-title" style="margin:0;">買い目スペース</span>
