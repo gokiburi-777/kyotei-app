@@ -277,6 +277,28 @@
       padding: 8px;
     }
 
+    .keep-item {
+      cursor: default;
+    }
+    
+    .keep-item:active {
+      background: #fff;
+    }
+    
+    .keep-del-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      background: #dc3545;
+      color: white;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
     /* 収支管理 */
     .btn-add {
       background: #198754;
@@ -644,7 +666,7 @@
 
     matched.forEach(combo => {
       const key = combo.join('-');
-      const item = createSanrentanElement(combo, oddsData[key] || '---');
+      const item = createSanrentanElement(combo, oddsData[key] || '---', false);
       item.addEventListener('click', () => {
         keepSet.add(key);
         renderKeepList();
@@ -655,9 +677,13 @@
   }
 
   // 3連単カラーボックス表示要素の生成
-  function createSanrentanElement(combo, oddsVal) {
+  function createSanrentanElement(combo, oddsVal, isKeep = false) {
     const div = document.createElement('div');
     div.className = 'sanrentan-item';
+    if (isKeep) {
+      div.classList.add('keep-item');
+    }
+    
     div.innerHTML = `
       <div class="sanrentan-boxes">
         <span class="box-num b-${combo[0]}">${combo[0]}</span>
@@ -666,7 +692,10 @@
         <span class="hyphen">-</span>
         <span class="box-num b-${combo[2]}">${combo[2]}</span>
       </div>
-      <span class="odds-val">${oddsVal}</span>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="odds-val">${oddsVal}</span>
+        ${isKeep ? `<span class="keep-del-btn">×</span>` : ''}
+      </div>
     `;
     return div;
   }
@@ -683,12 +712,18 @@
 
     keepSet.forEach(key => {
       const combo = key.split('-').map(Number);
-      const item = createSanrentanElement(combo, oddsData[key] || '---');
-      item.addEventListener('click', () => {
-        keepSet.delete(key);
-        renderKeepList();
-        saveAppState();
-      });
+      const item = createSanrentanElement(combo, oddsData[key] || '---', true);
+      
+      const delBtn = item.querySelector('.keep-del-btn');
+      if (delBtn) {
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation(); // イベントのバブリングを停止
+          keepSet.delete(key);
+          renderKeepList();
+          saveAppState();
+        });
+      }
+      
       keepList.appendChild(item);
     });
   }
