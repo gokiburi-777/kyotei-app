@@ -4,12 +4,25 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 import pytz
-import time  # ← これを追加
+import time
 
 app = Flask(__name__)
 CORS(app)
 
-# --- 中略（generate_combo_order の部分はそのまま） ---
+# 1. まず最初に「generate_combo_order関数」を定義する
+def generate_combo_order():
+    combos = []
+    for second_idx in range(5):
+        for third_idx in range(4):
+            for first in range(1, 7):
+                seconds = [x for x in range(1, 7) if x != first]
+                second = seconds[second_idx]
+                thirds = [y for y in range(1, 7) if y != first and y != second]
+                third = thirds[third_idx]
+                combos.append(f"{first}-{second}-{third}")
+    return combos
+
+# 2. その後で関数を呼び出して定数に代入する
 COMBO_ORDER = generate_combo_order()
 
 @app.route('/api/odds', methods=['GET'])
@@ -29,26 +42,22 @@ def get_odds():
     }
 
     try:
-        # ======= ここから変更 =======
-        max_retries = 3  # 最大3回まで挑戦する
+        max_retries = 3
         res = None
         
         for attempt in range(max_retries):
             try:
-                # timeoutを20秒に延長
                 res = requests.get(target_url, headers=headers, timeout=20)
                 if res.status_code == 200:
-                    break  # 成功したらループを抜ける
+                    break
             except requests.exceptions.Timeout:
                 if attempt == max_retries - 1:
-                    # 3回目でもダメだった場合
                     return jsonify({'error': '公式サイトが混雑しており、タイムアウトしました。少し時間をおいて再度お試しください。'}), 504
-                time.sleep(1)  # 失敗したら1秒休んでから再挑戦
+                time.sleep(1)
         
         if res is None or res.status_code != 200:
             status = res.status_code if res else 'Unknown'
             return jsonify({'error': f'取得失敗 (ステータス: {status})'}), 500
-        # ======= ここまで変更 =======
 
         soup = BeautifulSoup(res.content, 'html.parser')
         odds_elements = soup.select('td.oddsPoint')
