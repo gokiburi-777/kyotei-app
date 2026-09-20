@@ -653,15 +653,18 @@
 
     try {
       const response = await fetch(apiUrl);
-      if (!response.ok) throw new Error(`サーバーエラー: ${response.status}`);
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.error || `サーバーエラー: ${response.status}`);
+      }
       
-      const htmlText = await response.text();
-      oddsData = parseOddsHTML(htmlText);
+      // サーバーから送られてきたJSONをそのまま利用
+      oddsData = await response.json();
       const count = Object.keys(oddsData).length;
 
       if (count === 0) {
         status.className = 'status-error';
-        status.textContent = 'オッズを取得できませんでした。（未開催・発売前・締切後の可能性があります）';
+        status.textContent = 'オッズを取得できませんでした。';
       } else {
         status.className = 'status-success';
         status.textContent = `取得成功！ (${count}件のオッズ反映)`;
@@ -671,51 +674,10 @@
     } catch (e) {
       console.error(e);
       status.className = 'status-error';
-      status.textContent = 'オッズの取得に失敗しました。';
+      status.textContent = e.message || 'オッズの取得に失敗しました。';
     } finally {
       btn.disabled = false;
     }
-  }
-
-  // 公式サイトHTMLからオッズを抽出するパース関数
-  function parseOddsHTML(htmlText) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlText, "text/html");
-    const parsedOdds = {};
-
-    const oddsTds = doc.querySelectorAll("td.oddsPoint");
-    oddsTds.forEach(td => {
-      const val = td.textContent.trim();
-      if (!val) return;
-
-      let classStr = td.className || "";
-      const parentTr = td.closest("tr");
-      if (parentTr) {
-        classStr += " " + parentTr.className;
-      }
-
-      const match = classStr.match(/p3t_(\d)[\-_]?(\d)[\-_]?(\d)/);
-      if (match) {
-        const key = `${match[1]}-${match[2]}-${match[3]}`;
-        parsedOdds[key] = val;
-      }
-    });
-
-    if (Object.keys(parsedOdds).length === 0) {
-      const trs = doc.querySelectorAll("tr");
-      trs.forEach(tr => {
-        const text = tr.innerText || tr.textContent;
-        const matches = [...text.matchAll(/(\d)\s*[\-\s]\s*(\d)\s*[\-\s]\s*(\d)\s+([\d\.]+)/g)];
-        matches.forEach(m => {
-          const [_, b1, b2, b3, val] = m;
-          if (new Set([b1, b2, b3]).size === 3) {
-            parsedOdds[`${b1}-${b2}-${b3}`] = val;
-          }
-        });
-      });
-    }
-
-    return parsedOdds;
   }
 
   // ----------------------------------------------------
