@@ -486,6 +486,7 @@
 
   // RenderサーバーのURL
   const RENDER_SERVER_URL = "https://kyotei-app-41wq.onrender.com";
+  const APP_STATE_KEY = 'kyotei_app_all_state';
 
   // 120通りの3連単生成
   function generateAll120() {
@@ -526,19 +527,77 @@
     boatConditionsContainer.appendChild(div);
   }
 
+  // 状態の保存処理
+  function saveAppState() {
+    const boatConds = {};
+    document.querySelectorAll('.boat-select').forEach(select => {
+      boatConds[select.getAttribute('data-boat')] = select.value;
+    });
+
+    const state = {
+      jyo: document.getElementById('jyoSelect').value,
+      race: document.getElementById('raceSelect').value,
+      boatConds: boatConds,
+      keepList: Array.from(keepSet),
+      oddsData: oddsData
+    };
+    localStorage.setItem(APP_STATE_KEY, JSON.stringify(state));
+  }
+
+  // 状態の読み込み処理
+  function loadAppState() {
+    const saved = localStorage.getItem(APP_STATE_KEY);
+    if (!saved) return;
+    try {
+      const state = JSON.parse(saved);
+      if (state.jyo) document.getElementById('jyoSelect').value = state.jyo;
+      if (state.race) document.getElementById('raceSelect').value = state.race;
+      
+      if (state.boatConds) {
+        document.querySelectorAll('.boat-select').forEach(select => {
+          const boat = select.getAttribute('data-boat');
+          if (state.boatConds[boat]) {
+            select.value = state.boatConds[boat];
+          }
+        });
+      }
+
+      if (state.keepList) {
+        keepSet = new Set(state.keepList);
+      }
+
+      if (state.oddsData) {
+        oddsData = state.oddsData;
+      }
+    } catch (e) {
+      console.error('状態の復元に失敗しました', e);
+    }
+  }
+
+  // アプリ起動時に保存データを復元
+  loadAppState();
+
   // イベントリスナー
   document.querySelectorAll('.boat-select').forEach(select => {
-    select.addEventListener('change', filterAndRender);
+    select.addEventListener('change', () => {
+      filterAndRender();
+      saveAppState();
+    });
   });
+
+  document.getElementById('jyoSelect').addEventListener('change', saveAppState);
+  document.getElementById('raceSelect').addEventListener('change', saveAppState);
 
   document.getElementById('resetBtn').addEventListener('click', () => {
     document.querySelectorAll('.boat-select').forEach(s => s.value = 'any');
     filterAndRender();
+    saveAppState();
   });
 
   document.getElementById('clearKeepBtn').addEventListener('click', () => {
     keepSet.clear();
     renderKeepList();
+    saveAppState();
   });
 
   document.getElementById('updateOddsBtn').addEventListener('click', fetchOdds);
@@ -589,6 +648,7 @@
       item.addEventListener('click', () => {
         keepSet.add(key);
         renderKeepList();
+        saveAppState();
       });
       resultList.appendChild(item);
     });
@@ -627,6 +687,7 @@
       item.addEventListener('click', () => {
         keepSet.delete(key);
         renderKeepList();
+        saveAppState();
       });
       keepList.appendChild(item);
     });
@@ -658,7 +719,6 @@
         throw new Error(errJson.error || `サーバーエラー: ${response.status}`);
       }
       
-      // サーバーから送られてきたJSONをそのまま利用
       oddsData = await response.json();
       const count = Object.keys(oddsData).length;
 
@@ -670,6 +730,7 @@
         status.textContent = `取得成功！ (${count}件のオッズ反映)`;
         filterAndRender();
         renderKeepList();
+        saveAppState(); // 取得成功時も状態を保存
       }
     } catch (e) {
       console.error(e);
@@ -788,7 +849,7 @@
     calculateTotal();
   }
 
-  // 初期化
+  // 初期化時の実行（保存された状態を画面に反映）
   filterAndRender();
   renderKeepList();
   loadData();
