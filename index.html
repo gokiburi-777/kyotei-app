@@ -171,7 +171,7 @@
     .result-list {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 6px;
+      gap: 8px;
       max-height: 220px;
       overflow-y: auto;
       padding-right: 2px;
@@ -182,14 +182,13 @@
       background: #fff;
       border: 1px solid #dee2e6;
       border-radius: 6px;
-      padding: 4px 5px;
+      padding: 6px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
       user-select: none;
       transition: background-color 0.1s;
-      min-width: 0;
     }
 
     .sanrentan-item:active {
@@ -199,31 +198,30 @@
     .sanrentan-boxes {
       display: flex;
       align-items: center;
-      gap: 1px;
+      gap: 2px;
     }
 
     .box-num {
-      width: 17px;
-      height: 17px;
+      width: 20px;
+      height: 20px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: bold;
       border-radius: 3px;
     }
 
     .hyphen {
-      font-size: 0.65rem;
+      font-size: 0.7rem;
       color: #888;
     }
 
     .odds-val {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       color: #dc3545;
       font-weight: bold;
-      margin-left: 2px;
-      white-space: nowrap;
+      margin-left: 4px;
     }
 
     .empty-msg {
@@ -232,19 +230,6 @@
       color: #888;
       font-size: 0.85rem;
       padding: 16px 0;
-    }
-
-    .reset-btn {
-      width: 100%;
-      padding: 8px;
-      margin-top: 10px;
-      background: #6c757d;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 0.85rem;
-      cursor: pointer;
     }
 
     /* 買い目スペース */
@@ -269,14 +254,14 @@
     .keep-list {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 6px;
+      gap: 8px;
       min-height: 50px;
       max-height: 180px;
       overflow-y: auto;
       background: #fff;
       border: 1px dashed #ced4da;
       border-radius: 6px;
-      padding: 6px;
+      padding: 8px;
     }
 
     .keep-del-btn {
@@ -289,7 +274,7 @@
       align-items: center;
       justify-content: center;
       font-size: 0.5rem;
-      margin-left: 2px;
+      margin-left: 4px;
       flex-shrink: 0;
     }
 
@@ -434,7 +419,10 @@
 
   <!-- 1. 各艇の着順条件 -->
   <div class="card">
-    <div class="section-title">各艇の着順絞り込み</div>
+    <div class="section-title">
+      <span>各艇の着順絞り込み</span>
+      <button class="btn-clear" id="resetBtn">クリア</button>
+    </div>
     <div class="boat-condition-list" id="boatConditions">
       <!-- JS生成 -->
     </div>
@@ -450,11 +438,9 @@
     <div class="result-list" id="resultList">
       <!-- 抽出データ表示 -->
     </div>
-
-    <button class="reset-btn" id="resetBtn">条件リセット</button>
   </div>
 
-  <!-- 3. 買い目スペース -->
+  <!-- 3. 買い目キープスペース -->
   <div class="card">
     <div class="keep-header">
       <span class="section-title" style="margin:0;">買い目スペース</span>
