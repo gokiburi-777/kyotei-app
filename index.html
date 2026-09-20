@@ -232,6 +232,19 @@
       padding: 16px 0;
     }
 
+    .reset-btn {
+      width: 100%;
+      padding: 8px;
+      margin-top: 10px;
+      background: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
     /* 買い目スペース */
     .keep-header {
       display: flex;
@@ -419,8 +432,8 @@
 
   <!-- 1. 各艇の着順条件 -->
   <div class="card">
-    <div class="section-title">
-      <span>各艇の着順絞り込み</span>
+    <div class="keep-header">
+      <span class="section-title" style="margin:0;">各艇の着順絞り込み</span>
       <button class="btn-clear" id="resetBtn">クリア</button>
     </div>
     <div class="boat-condition-list" id="boatConditions">
