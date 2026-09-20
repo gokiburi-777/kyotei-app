@@ -189,7 +189,6 @@
         const status = document.getElementById("status-message");
         const oddsList = document.getElementById("odds-list");
 
-        // 状態初期化
         btn.disabled = true;
         status.style.display = "block";
         status.className = "status-loading";
@@ -206,7 +205,7 @@
 
             const htmlText = await response.text();
             
-            // DOMParserでHTML解析
+            // 解析実行
             const oddsData = parseOddsHTML(htmlText);
             const count = Object.keys(oddsData).length;
 
@@ -228,83 +227,56 @@
         }
     }
 
-    // HTML本文から3連単オッズを抽出する解析ロジック
+    // より堅牢なオッズ解析ロジック
     function parseOddsHTML(htmlText) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, "text/html");
         const oddsData = {};
 
-        const tables = doc.querySelectorAll("table.table1");
-        
-        tables.forEach(table => {
-            const tbodies = table.querySelectorAll("tbody");
-            
-            tbodies.forEach(tbody => {
-                const rows = tbody.querySelectorAll("tr");
-                if (rows.length === 0) return;
+        // 1. oddsPoint クラスのセルからのダイレクト抽出
+        const oddsTds = doc.querySelectorAll("td.oddsPoint");
+        oddsTds.forEach(td => {
+            const val = td.textContent.trim();
+            if (!val) return;
 
-                // 1着艇番号の特定
-                let firstBoat = null;
-                rows.forEach(r => {
-                    const th = r.querySelector("th[class*='is-boatColor']");
-                    if (th && !isNaN(th.textContent.trim()) && th.textContent.trim() !== "") {
-                        firstBoat = th.textContent.trim();
-                    }
-                });
+            // クラス名 (例: p3t_123 や p3t_1-2-3) を探索
+            let classStr = td.className || "";
+            const parentTr = td.closest("tr");
+            if (parentTr) {
+                classStr += " " + parentTr.className;
+            }
 
-                if (!firstBoat) return;
-
-                // 2着艇と3着艇・オッズの組み合わせを取得
-                let secondBoat = null;
-                rows.forEach(r => {
-                    const tdSec = r.querySelector("td[class*='is-boatColor']");
-                    if (tdSec && !isNaN(tdSec.textContent.trim()) && tdSec.textContent.trim() !== "") {
-                        secondBoat = tdSec.textContent.trim();
-                    }
-
-                    const tds = r.querySelectorAll("td");
-                    tds.forEach((td, idx) => {
-                        const txt = td.textContent.trim();
-                        // オッズ値の判定（数字・少数点・ハイフンのみ）
-                        if (/^[\d\.\-]+$/.test(txt) && txt.length > 0) {
-                            let thirdBoat = null;
-                            if (idx > 0 && !isNaN(tds[idx - 1].textContent.trim())) {
-                                thirdBoat = tds[idx - 1].textContent.trim();
-                            }
-
-                            if (secondBoat && thirdBoat) {
-                                const key = `${firstBoat}-${secondBoat}-${thirdBoat}`;
-                                oddsData[key] = txt;
-                            }
-                        }
-                    });
-                });
-            });
+            const match = classStr.match(/p3t_(\d)[\-_]?(\d)[\-_]?(\d)/);
+            if (match) {
+                const key = `${match[1]}-${match[2]}-${match[3]}`;
+                oddsData[key] = val;
+            }
         });
 
-        // テーブル構造で取れなかった場合のテキスト走査フォールバック
+        // 2. 万が一取れなかった場合の全テーブル行スキャン
         if (Object.keys(oddsData).length === 0) {
-            const fullText = doc.body ? doc.body.innerText || doc.body.textContent : "";
-            const matches = [...fullText.matchAll(/(\d)\s*[\-\s]\s*(\d)\s*[\-\s]\s*(\d)\s+([\d\.]+)/g)];
-            
-            matches.forEach(m => {
-                const [_, b1, b2, b3, val] = m;
-                if (new Set([b1, b2, b3]).size === 3) { // 番号の重複がない場合
-                    oddsData[`${b1}-${b2}-${b3}`] = val;
-                }
+            const trs = doc.querySelectorAll("tr");
+            trs.forEach(tr => {
+                const text = tr.innerText || tr.textContent;
+                // 「1-2-3 12.3」のパターンを全てマッチング
+                const matches = [...text.matchAll(/(\d)\s*[\-\s]\s*(\d)\s*[\-\s]\s*(\d)\s+([\d\.]+)/g)];
+                matches.forEach(m => {
+                    const [_, b1, b2, b3, val] = m;
+                    if (new Set([b1, b2, b3]).size === 3) {
+                        oddsData[`${b1}-${b2}-${b3}`] = val;
+                    }
+                });
             });
         }
 
-        console.log("解析結果:", oddsData);
+        console.log("解析成功件数:", Object.keys(oddsData).length, oddsData);
         return oddsData;
     }
 
-    // オッズカードの描画
     function renderOdds(oddsData) {
         const oddsList = document.getElementById("odds-list");
         oddsList.innerHTML = "";
 
-        // 組み合せ（1-2-3の昇順）でソートして表示
         const keys = Object.keys(oddsData).sort();
 
         keys.forEach(key => {
