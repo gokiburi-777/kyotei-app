@@ -16,81 +16,61 @@ def get_odds():
         return jsonify({'success': False, 'error': 'jyo and race are required'}), 400
 
     jyo_formatted = str(jyo).zfill(2)
+    # PC版オッズページURL
     target_url = f"https://www.boatrace.jp/owpc/pc/race/odds3t?rno={race}&jlc={jyo_formatted}"
     
-    # ブラウザに完全に偽装するための標準ヘッダー
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
-        'Referer': 'https://www.boatrace.jp/'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8'
     }
 
     try:
-        session = requests.Session()
-        res = session.get(target_url, headers=headers, timeout=10)
+        res = requests.get(target_url, headers=headers, timeout=10)
         res.raise_for_status()
         
         soup = BeautifulSoup(res.text, 'html.parser')
         odds_data = {}
 
-        # 3連単テーブル (table1) の解析
-        tables = soup.select('table.table1')
+        # td要素の中から、クラス名「oddsPoint」または数値データが入っているセルを全網羅
+        # 公式サイトの oddsPoint セルは内包テキストにオッズ値（例: 12.3）が入る
+        points = soup.find_all('td', class_='oddsPoint')
         
-        for table in tables:
-            tbodies = table.select('tbody')
-            for tbody in tbodies:
-                rows = tbody.select('tr')
-                if not rows:
-                    continue
+        for pt in points:
+            val = pt.get_text(strip=True)
+            if not val:
+                continue
+            
+            # 親の tr や td 自身の class に含まれる p3t_1-2-3 や p3t_123 などの識別文字列を探す
+            parent_tr = pt.find_parent('tr')
+            classes_str = " ".join(pt.get('class', []))
+            if parent_tr:
+                classes_str += " " + " ".join(parent_tr.get('class', []))
 
-                # 1着艇の番号を取得
-                first_boat = None
-                for r in rows:
-                    th = r.select_one('th[class*="is-boatColor"]')
-                    if th and th.get_text(strip=True).isdigit():
-                        first_boat = th.get_text(strip=True)
-                        break
+            # クラス名から 3連単の組み合せ（1-2-3）を抽出
+            m = re.search(r'p3t_(\d)(\d)(\d)', classes_str)
+            if m:
+                key = f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+                odds_data[key] = val
 
-                if not first_boat:
-                    continue
-
-                # 2着・3着・オッズを取得
-                current_second = None
-                for r in rows:
-                    # 2着の艇番号
-                    td_sec = r.select_one('td[class*="is-boatColor"]')
-                    if td_sec and td_sec.get_text(strip=True).isdigit():
-                        current_second = td_sec.get_text(strip=True)
-
-                    # 3着とオッズ値のペアを解析
-                    tds = r.select('td')
-                    for i, td in enumerate(tds):
-                        text = td.get_text(strip=True)
-                        # オッズ数値（12.3 や --- など）
-                        if re.match(r'^[\d\.\-]+$', text) and len(text) > 0:
-                            # 前のセルに3着艇の数字があるか確認
-                            third_boat = None
-                            if i > 0 and tds[i-1].get_text(strip=True).isdigit():
-                                third_boat = tds[i-1].get_text(strip=True)
-
-                            if current_second and third_boat:
-                                key = f"{first_boat}-{current_second}-{third_boat}"
-                                odds_data[key] = text
-
-        # バックアップ解析（テキスト全体から抽出）
+        # 上記で取れなかった場合：テーブル全行から強引に「1 2 3 12.3」の並びを直接パース
         if not odds_data:
-            text = soup.get_text(" ", strip=True)
-            matches = re.findall(r'(\d)\s*[\-\s]\s*(\d)\s*[\-\s]\s*(\d)\s+([\d\.]+)', text)
-            for m in matches:
-                if len(set(m[:3])) == 3:
-                    odds_data[f"{m[0]}-{m[1]}-{m[2]}"] = m[3]
+            for tr in soup.find_all('tr'):
+                cells = [td.get_text(strip=True) for td in tr.find_all(['td', 'th']) if td.get_text(strip=True)]
+                # セル数が足りない行はスキップ
+                if len(cells) < 3:
+                    continue
+                # 文字列全体から「数字-数字-数字 数値」パターンを検出
+                line = " ".join(cells)
+                matches = re.findall(r'(\d)\s*[\-\s]\s*(\d)\s*[\-\s]\s*(\d)\s+([\d\.\-]+)', line)
+                for m in matches:
+                    if len(set(m[:3])) == 3: # 舟番が重複していない場合
+                        odds_data[f"{m[0]}-{m[1]}-{m[2]}"] = m[3]
 
         return jsonify({
             'success': True,
             'odds': odds_data,
             'count': len(odds_data),
-            'html_len': len(res.text)  # デバッグ用：取得したHTMLの長さ
+            'url': target_url
         })
 
     except Exception as e:
