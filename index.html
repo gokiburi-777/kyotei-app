@@ -204,8 +204,6 @@
             }
 
             const htmlText = await response.text();
-            
-            // 解析実行
             const oddsData = parseOddsHTML(htmlText);
             const count = Object.keys(oddsData).length;
 
@@ -227,19 +225,18 @@
         }
     }
 
-    // より堅牢なオッズ解析ロジック
+    // HTML本文からオッズを解析する堅牢なロジック
     function parseOddsHTML(htmlText) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, "text/html");
         const oddsData = {};
 
-        // 1. oddsPoint クラスのセルからのダイレクト抽出
+        // 1. oddsPoint クラスのセルから抽出
         const oddsTds = doc.querySelectorAll("td.oddsPoint");
         oddsTds.forEach(td => {
             const val = td.textContent.trim();
             if (!val) return;
 
-            // クラス名 (例: p3t_123 や p3t_1-2-3) を探索
             let classStr = td.className || "";
             const parentTr = td.closest("tr");
             if (parentTr) {
@@ -253,12 +250,11 @@
             }
         });
 
-        // 2. 万が一取れなかった場合の全テーブル行スキャン
+        // 2. テーブル全行スキャンによるバックアップ抽出
         if (Object.keys(oddsData).length === 0) {
             const trs = doc.querySelectorAll("tr");
             trs.forEach(tr => {
                 const text = tr.innerText || tr.textContent;
-                // 「1-2-3 12.3」のパターンを全てマッチング
                 const matches = [...text.matchAll(/(\d)\s*[\-\s]\s*(\d)\s*[\-\s]\s*(\d)\s+([\d\.]+)/g)];
                 matches.forEach(m => {
                     const [_, b1, b2, b3, val] = m;
@@ -269,7 +265,6 @@
             });
         }
 
-        console.log("解析成功件数:", Object.keys(oddsData).length, oddsData);
         return oddsData;
     }
 
