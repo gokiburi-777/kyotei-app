@@ -254,7 +254,7 @@
     }
 
     .btn-clear {
-      background: #dc3545;
+      background: #6c757d;
       color: white;
       border: none;
       padding: 4px 8px;
@@ -277,26 +277,18 @@
       padding: 8px;
     }
 
-    .keep-item {
-      cursor: default;
-    }
-    
-    .keep-item:active {
-      background: #fff;
-    }
-    
     .keep-del-btn {
+      background: #6c757d;
+      color: #fff;
+      border-radius: 50%;
+      width: 12px;
+      height: 12px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 20px;
-      height: 20px;
-      background: #dc3545;
-      color: white;
-      border-radius: 50%;
-      font-size: 0.8rem;
-      font-weight: bold;
-      cursor: pointer;
+      font-size: 0.5rem;
+      margin-left: 4px;
+      flex-shrink: 0;
     }
 
     /* 収支管理 */
@@ -666,7 +658,7 @@
 
     matched.forEach(combo => {
       const key = combo.join('-');
-      const item = createSanrentanElement(combo, oddsData[key] || '---', false);
+      const item = createSanrentanElement(combo, oddsData[key] || '---');
       item.addEventListener('click', () => {
         keepSet.add(key);
         renderKeepList();
@@ -677,13 +669,9 @@
   }
 
   // 3連単カラーボックス表示要素の生成
-  function createSanrentanElement(combo, oddsVal, isKeep = false) {
+  function createSanrentanElement(combo, oddsVal) {
     const div = document.createElement('div');
     div.className = 'sanrentan-item';
-    if (isKeep) {
-      div.classList.add('keep-item');
-    }
-    
     div.innerHTML = `
       <div class="sanrentan-boxes">
         <span class="box-num b-${combo[0]}">${combo[0]}</span>
@@ -692,10 +680,7 @@
         <span class="hyphen">-</span>
         <span class="box-num b-${combo[2]}">${combo[2]}</span>
       </div>
-      <div style="display:flex; align-items:center; gap:8px;">
-        <span class="odds-val">${oddsVal}</span>
-        ${isKeep ? `<span class="keep-del-btn">×</span>` : ''}
-      </div>
+      <span class="odds-val">${oddsVal}</span>
     `;
     return div;
   }
@@ -712,18 +697,18 @@
 
     keepSet.forEach(key => {
       const combo = key.split('-').map(Number);
-      const item = createSanrentanElement(combo, oddsData[key] || '---', true);
+      const item = createSanrentanElement(combo, oddsData[key] || '---');
       
-      const delBtn = item.querySelector('.keep-del-btn');
-      if (delBtn) {
-        delBtn.addEventListener('click', (e) => {
-          e.stopPropagation(); // イベントのバブリングを停止
-          keepSet.delete(key);
-          renderKeepList();
-          saveAppState();
-        });
-      }
-      
+      const delBtn = document.createElement('span');
+      delBtn.className = 'keep-del-btn';
+      delBtn.textContent = '✕';
+      item.appendChild(delBtn);
+
+      item.addEventListener('click', () => {
+        keepSet.delete(key);
+        renderKeepList();
+        saveAppState();
+      });
       keepList.appendChild(item);
     });
   }
