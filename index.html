@@ -1,289 +1,835 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>競艇オッズ確認アプリ</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f4f6f9;
-            color: #333;
-            padding: 15px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-        h1 {
-            font-size: 1.4rem;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #1a365d;
-        }
-        .control-panel {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        label {
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: #4a5568;
-        }
-        select, button {
-            padding: 10px;
-            font-size: 1rem;
-            border-radius: 8px;
-            border: 1px solid #cbd5e0;
-            outline: none;
-        }
-        select:focus {
-            border-color: #3182ce;
-        }
-        .btn-update {
-            grid-column: span 2;
-            background-color: #3182ce;
-            color: white;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-top: 5px;
-        }
-        .btn-update:hover {
-            background-color: #2b6cb0;
-        }
-        .btn-update:disabled {
-            background-color: #a0aec0;
-            cursor: not-allowed;
-        }
-        #status-message {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            text-align: center;
-            display: none;
-        }
-        .status-loading {
-            background-color: #ebf8ff;
-            color: #2b6cb0;
-        }
-        .status-success {
-            background-color: #f0fff4;
-            color: #2f855a;
-        }
-        .status-error {
-            background-color: #fff5f5;
-            color: #c53030;
-        }
-        .odds-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-            gap: 8px;
-            margin-top: 15px;
-        }
-        .odds-card {
-            background: #edf2f7;
-            padding: 8px;
-            border-radius: 6px;
-            text-align: center;
-            font-size: 0.85rem;
-        }
-        .odds-card .kumi {
-            font-weight: bold;
-            color: #2d3748;
-            margin-bottom: 4px;
-        }
-        .odds-card .val {
-            color: #e53e3e;
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>競艇 3連単絞り込み＆収支管理</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      text-align: center;
+      margin: 0 0 4px 0;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: #666;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* レース選択エリア */
+    .odds-select-group {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .odds-select-group select {
+      flex: 1;
+      padding: 6px;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      border: 1px solid #ced4da;
+      background: #fff;
+    }
+
+    .btn-odds-update {
+      width: 100%;
+      background: #0d6efd;
+      color: white;
+      border: none;
+      padding: 8px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .btn-odds-update:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+
+    #status-message {
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      text-align: center;
+      display: none;
+    }
+
+    .status-loading { background-color: #ebf8ff; color: #2b6cb0; }
+    .status-success { background-color: #f0fff4; color: #2f855a; }
+    .status-error { background-color: #fff5f5; color: #c53030; }
+
+    /* 各艇の条件設定リスト */
+    .boat-condition-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .boat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #ced4da;
+    }
+
+    .boat-badge {
+      font-weight: bold;
+      font-size: 0.85rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    /* 艇色スタイル */
+    .b-1 { background-color: #ffffff; color: #333; border: 1px solid #333; }
+    .b-2 { background-color: #212529; color: #fff; }
+    .b-3 { background-color: #dc3545; color: #fff; }
+    .b-4 { background-color: #0d6efd; color: #fff; }
+    .b-5 { background-color: #ffc107; color: #000; }
+    .b-6 { background-color: #198754; color: #fff; }
+
+    select, input[type="number"], input[type="text"] {
+      font-size: 0.85rem;
+      padding: 4px 6px;
+      border-radius: 4px;
+      border: 1px solid #ced4da;
+      background-color: #fff;
+    }
+
+    .boat-select {
+      width: 150px;
+    }
+
+    /* 抽出結果エリア */
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+
+    .count-badge {
+      background: #0d6efd;
+      color: white;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    .result-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    /* 3連単カラーボックス＋オッズ表示アイテム */
+    .sanrentan-item {
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.1s;
+    }
+
+    .sanrentan-item:active {
+      background: #e2e6ea;
+    }
+
+    .sanrentan-boxes {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .box-num {
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      border-radius: 3px;
+    }
+
+    .hyphen {
+      font-size: 0.7rem;
+      color: #888;
+    }
+
+    .odds-val {
+      font-size: 0.75rem;
+      color: #dc3545;
+      font-weight: bold;
+      margin-left: 4px;
+    }
+
+    .empty-msg {
+      grid-column: span 2;
+      text-align: center;
+      color: #888;
+      font-size: 0.85rem;
+      padding: 16px 0;
+    }
+
+    .reset-btn {
+      width: 100%;
+      padding: 8px;
+      margin-top: 10px;
+      background: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    /* 買い目スペース */
+    .keep-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .btn-clear {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .keep-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      min-height: 50px;
+      max-height: 180px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px dashed #ced4da;
+      border-radius: 6px;
+      padding: 8px;
+    }
+
+    /* 収支管理 */
+    .btn-add {
+      background: #198754;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .race-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .race-item {
+      background: #fff;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      padding: 6px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .race-name-input {
+      width: 45px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .num-input {
+      width: 65px;
+      text-align: right;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    .race-profit {
+      font-size: 0.8rem;
+      font-weight: bold;
+      width: 75px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .btn-del {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .total-box {
+      background: #e9ecef;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 8px;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      margin-bottom: 3px;
+    }
+
+    .total-row.main {
+      font-size: 1rem;
+      font-weight: bold;
+      margin-top: 6px;
+      padding-top: 4px;
+      border-top: 1px solid #bbb;
+    }
+
+    .plus { color: #0d6efd; }
+    .minus { color: #dc3545; }
+
+    .clear-storage-btn {
+      width: 100%;
+      background: transparent;
+      color: #888;
+      border: 1px dashed #ccc;
+      padding: 6px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      margin-top: 8px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🚤 3連単オッズ取得</h1>
+  <h1>競艇 3連単絞り込み＆収支管理</h1>
+  <div class="subtitle">120通りからの抽出・オッズ確認・買い目キープ</div>
 
-    <div class="control-panel">
-        <div class="form-group">
-            <label for="jyo-select">競艇場</label>
-            <select id="jyo-select">
-                <option value="01">01# 桐生</option>
-                <option value="02">02# 戸田</option>
-                <option value="03">03# 江戸川</option>
-                <option value="04">04# 平和島</option>
-                <option value="05">05# 多摩川</option>
-                <option value="06">06# 浜名湖</option>
-                <option value="07">07# 蒲郡</option>
-                <option value="08">08# 常滑</option>
-                <option value="09">09# 津</option>
-                <option value="10">10# 三国</option>
-                <option value="11">11# びわこ</option>
-                <option value="12">12# 住之江</option>
-                <option value="13">13# 尼崎</option>
-                <option value="14">14# 鳴門</option>
-                <option value="15">15# 丸亀</option>
-                <option value="16">16# 児島</option>
-                <option value="17">17# 宮島</option>
-                <option value="18">18# 徳山</option>
-                <option value="19">19# 下関</option>
-                <option value="20">20# 若松</option>
-                <option value="21">21# 芦屋</option>
-                <option value="22">22# 福岡</option>
-                <option value="23">23# 唐津</option>
-                <option value="24">24# 大村</option>
-            </select>
-        </div>
+  <!-- 0. レース選択＆オッズ更新 -->
+  <div class="card">
+    <div class="section-title">オッズ自動取得設定</div>
+    <div class="odds-select-group">
+      <select id="jyoSelect">
+        <option value="">ボートレース場を選択</option>
+        <option value="01">桐生</option><option value="02">戸田</option><option value="03">江戸川</option>
+        <option value="04">平和島</option><option value="05">多摩川</option><option value="06">浜名湖</option>
+        <option value="07">蒲郡</option><option value="08">常滑</option><option value="09">津</option>
+        <option value="10">三国</option><option value="11">びわこ</option><option value="12">住之江</option>
+        <option value="13">尼崎</option><option value="14">鳴門</option><option value="15">丸亀</option>
+        <option value="16">児島</option><option value="17">宮島</option><option value="18">徳山</option>
+        <option value="19">下関</option><option value="20">若松</option><option value="21">芦屋</option>
+        <option value="22">福岡</option><option value="23">唐津</option><option value="24">大村</option>
+      </select>
+      <select id="raceSelect">
+        <option value="">レース数を選択</option>
+        <option value="1">1R</option><option value="2">2R</option><option value="3">3R</option>
+        <option value="4">4R</option><option value="5">5R</option><option value="6">6R</option>
+        <option value="7">7R</option><option value="8">8R</option><option value="9">9R</option>
+        <option value="10">10R</option><option value="11">11R</option><option value="12">12R</option>
+      </select>
+    </div>
+    <button class="btn-odds-update" id="updateOddsBtn">オッズ更新</button>
+    <div id="status-message"></div>
+  </div>
 
-        <div class="form-group">
-            <label for="race-select">レース番号</label>
-            <select id="race-select">
-                <option value="1">1 R</option>
-                <option value="2">2 R</option>
-                <option value="3">3 R</option>
-                <option value="4">4 R</option>
-                <option value="5">5 R</option>
-                <option value="6">6 R</option>
-                <option value="7">7 R</option>
-                <option value="8">8 R</option>
-                <option value="9">9 R</option>
-                <option value="10">10 R</option>
-                <option value="11">11 R</option>
-                <option value="12">12 R</option>
-            </select>
-        </div>
+  <!-- 1. 各艇の着順条件 -->
+  <div class="card">
+    <div class="section-title">各艇の着順絞り込み</div>
+    <div class="boat-condition-list" id="boatConditions">
+      <!-- JS生成 -->
+    </div>
+  </div>
 
-        <button id="btn-fetch" class="btn-update" onclick="loadOdds()">オッズ更新</button>
+  <!-- 2. 抽出結果表示 -->
+  <div class="card">
+    <div class="result-header">
+      <span class="section-title" style="margin:0;">抽出結果 <span style="font-size:0.75rem; font-weight:normal; color:#666;">(タップでキープ)</span></span>
+      <span class="count-badge" id="countBadge">120 / 120 件</span>
     </div>
 
-    <div id="status-message"></div>
+    <div class="result-list" id="resultList">
+      <!-- 抽出データ表示 -->
+    </div>
 
-    <div id="odds-list" class="odds-container"></div>
+    <button class="reset-btn" id="resetBtn">条件リセット</button>
+  </div>
+
+  <!-- 3. 買い目キープスペース -->
+  <div class="card">
+    <div class="keep-header">
+      <span class="section-title" style="margin:0;">買い目スペース</span>
+      <button class="btn-clear" id="clearKeepBtn">クリア</button>
+    </div>
+    <div class="keep-list" id="keepList">
+      <!-- タップで溜まるエリア -->
+    </div>
+  </div>
+
+  <!-- 4. レース収支管理 -->
+  <div class="card">
+    <div class="section-title">
+      <span>レース別 収支管理</span>
+      <button class="btn-add" id="addRaceBtn">＋ レース追加</button>
+    </div>
+
+    <div class="race-list" id="raceList">
+      <!-- レース入力行 -->
+    </div>
+
+    <div class="total-box">
+      <div class="total-row">
+        <span>合計投資額:</span>
+        <span id="totalInvestment">0 円</span>
+      </div>
+      <div class="total-row">
+        <span>合計回収額:</span>
+        <span id="totalReturn">0 円</span>
+      </div>
+      <div class="total-row main">
+        <span>トータル収支:</span>
+        <span id="totalProfit" class="plus">0 円</span>
+      </div>
+    </div>
+
+    <button class="clear-storage-btn" id="clearStorageBtn">収支データをすべてクリア</button>
+  </div>
 </div>
 
 <script>
-    const RENDER_API_BASE = "https://kyotei-app-41wq.onrender.com";
+  // グローバル状態
+  let oddsData = {}; // { "1-2-3": "12.5", ... }
+  let keepSet = new Set(); // キープした買い目
 
-    async function loadOdds() {
-        const jyo = document.getElementById("jyo-select").value;
-        const race = document.getElementById("race-select").value;
-        const btn = document.getElementById("btn-fetch");
-        const status = document.getElementById("status-message");
-        const oddsList = document.getElementById("odds-list");
+  // RenderサーバーのURL
+  const RENDER_SERVER_URL = "https://kyotei-app-41wq.onrender.com";
 
-        btn.disabled = true;
-        status.style.display = "block";
-        status.className = "status-loading";
-        status.textContent = "オッズデータを取得中...";
-        oddsList.innerHTML = "";
-
-        try {
-            const apiUrl = `${RENDER_API_BASE}/api/odds?jyo=${jyo}&race=${race}`;
-            const response = await fetch(apiUrl);
-
-            if (!response.ok) {
-                throw new Error(`サーバーエラー: ${response.status}`);
-            }
-
-            const htmlText = await response.text();
-            const oddsData = parseOddsHTML(htmlText);
-            const count = Object.keys(oddsData).length;
-
-            if (count === 0) {
-                status.className = "status-error";
-                status.textContent = "オッズを取得できませんでした。（発売前・締切後・または指定レース未開催の可能性があります）";
-            } else {
-                status.className = "status-success";
-                status.textContent = `取得成功！ 合計 ${count} 件のオッズを表示中`;
-                renderOdds(oddsData);
-            }
-
-        } catch (error) {
-            console.error("エラー詳細:", error);
-            status.className = "status-error";
-            status.textContent = `通信エラーが発生しました: ${error.message}`;
-        } finally {
-            btn.disabled = false;
+  // 120通りの3連単生成
+  function generateAll120() {
+    const combos = [];
+    for (let i = 1; i <= 6; i++) {
+      for (let j = 1; j <= 6; j++) {
+        for (let k = 1; k <= 6; k++) {
+          if (i !== j && j !== k && i !== k) {
+            combos.push([i, j, k]);
+          }
         }
+      }
+    }
+    return combos;
+  }
+  const allCombinations = generateAll120();
+
+  // 条件選択UI初期化
+  const boatConditionsContainer = document.getElementById('boatConditions');
+  for (let i = 1; i <= 6; i++) {
+    const div = document.createElement('div');
+    div.className = 'boat-row';
+    div.innerHTML = `
+      <span class="boat-badge b-${i}">${i}号艇</span>
+      <select class="boat-select" data-boat="${i}">
+        <option value="any">指定なし</option>
+        <option value="1">1着</option>
+        <option value="2">2着</option>
+        <option value="3">3着</option>
+        <option value="3in">3着以内</option>
+        <option value="out">4着以下(着外)</option>
+        <option value="1or2">1着または2着</option>
+        <option value="2or3">2着または3着</option>
+        <option value="2out">2着以下</option>
+        <option value="3out">3着以下</option>
+      </select>
+    `;
+    boatConditionsContainer.appendChild(div);
+  }
+
+  // イベントリスナー
+  document.querySelectorAll('.boat-select').forEach(select => {
+    select.addEventListener('change', filterAndRender);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    document.querySelectorAll('.boat-select').forEach(s => s.value = 'any');
+    filterAndRender();
+  });
+
+  document.getElementById('clearKeepBtn').addEventListener('click', () => {
+    keepSet.clear();
+    renderKeepList();
+  });
+
+  document.getElementById('updateOddsBtn').addEventListener('click', fetchOdds);
+
+  // 絞り込み判定＆描画
+  function filterAndRender() {
+    const boatConds = {};
+    document.querySelectorAll('.boat-select').forEach(select => {
+      boatConds[select.getAttribute('data-boat')] = select.value;
+    });
+
+    const matched = allCombinations.filter(combo => {
+      for (let boat = 1; boat <= 6; boat++) {
+        const cond = boatConds[boat];
+        if (cond === 'any') continue;
+
+        const pos1 = combo[0] === boat;
+        const pos2 = combo[1] === boat;
+        const pos3 = combo[2] === boat;
+
+        if (cond === '1' && !pos1) return false;
+        if (cond === '2' && !pos2) return false;
+        if (cond === '3' && !pos3) return false;
+        if (cond === '3in' && !(pos1 || pos2 || pos3)) return false;
+        if (cond === 'out' && (pos1 || pos2 || pos3)) return false;
+        if (cond === '1or2' && !(pos1 || pos2)) return false;
+        if (cond === '2or3' && !(pos2 || pos3)) return false;
+        if (cond === '2out' && pos1) return false;
+        if (cond === '3out' && (pos1 || pos2)) return false;
+      }
+      return true;
+    });
+
+    const resultList = document.getElementById('resultList');
+    const countBadge = document.getElementById('countBadge');
+    
+    resultList.innerHTML = '';
+    countBadge.textContent = `${matched.length} / 120 件`;
+
+    if (matched.length === 0) {
+      resultList.innerHTML = `<div class="empty-msg">条件に合う買い目がありません</div>`;
+      return;
     }
 
-    // HTML本文からオッズを解析する堅牢なロジック
-    function parseOddsHTML(htmlText) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlText, "text/html");
-        const oddsData = {};
+    matched.forEach(combo => {
+      const key = combo.join('-');
+      const item = createSanrentanElement(combo, oddsData[key] || '---');
+      item.addEventListener('click', () => {
+        keepSet.add(key);
+        renderKeepList();
+      });
+      resultList.appendChild(item);
+    });
+  }
 
-        // 1. oddsPoint クラスのセルから抽出
-        const oddsTds = doc.querySelectorAll("td.oddsPoint");
-        oddsTds.forEach(td => {
-            const val = td.textContent.trim();
-            if (!val) return;
+  // 3連単カラーボックス表示要素の生成
+  function createSanrentanElement(combo, oddsVal) {
+    const div = document.createElement('div');
+    div.className = 'sanrentan-item';
+    div.innerHTML = `
+      <div class="sanrentan-boxes">
+        <span class="box-num b-${combo[0]}">${combo[0]}</span>
+        <span class="hyphen">-</span>
+        <span class="box-num b-${combo[1]}">${combo[1]}</span>
+        <span class="hyphen">-</span>
+        <span class="box-num b-${combo[2]}">${combo[2]}</span>
+      </div>
+      <span class="odds-val">${oddsVal}</span>
+    `;
+    return div;
+  }
 
-            let classStr = td.className || "";
-            const parentTr = td.closest("tr");
-            if (parentTr) {
-                classStr += " " + parentTr.className;
-            }
+  // 買い目スペースの再描画
+  function renderKeepList() {
+    const keepList = document.getElementById('keepList');
+    keepList.innerHTML = '';
+    
+    if (keepSet.size === 0) {
+      keepList.innerHTML = `<div class="empty-msg" style="grid-column:span 2;">タップして買い目を追加</div>`;
+      return;
+    }
 
-            const match = classStr.match(/p3t_(\d)[\-_]?(\d)[\-_]?(\d)/);
-            if (match) {
-                const key = `${match[1]}-${match[2]}-${match[3]}`;
-                oddsData[key] = val;
-            }
+    keepSet.forEach(key => {
+      const combo = key.split('-').map(Number);
+      const item = createSanrentanElement(combo, oddsData[key] || '---');
+      item.addEventListener('click', () => {
+        keepSet.delete(key);
+        renderKeepList();
+      });
+      keepList.appendChild(item);
+    });
+  }
+
+  // Renderサーバー経由でのオッズ自動取得処理
+  async function fetchOdds() {
+    const jyo = document.getElementById('jyoSelect').value;
+    const race = document.getElementById('raceSelect').value;
+    const btn = document.getElementById('updateOddsBtn');
+    const status = document.getElementById('status-message');
+
+    if (!jyo || !race) {
+      alert('レース場とレース数を選択してください。');
+      return;
+    }
+
+    btn.disabled = true;
+    status.style.display = 'block';
+    status.className = 'status-loading';
+    status.textContent = 'オッズデータ取得中...';
+
+    const apiUrl = `${RENDER_SERVER_URL}/api/odds?jyo=${jyo}&race=${race}`;
+
+    try {
+      const response = await fetch(apiUrl);
+      if (!response.ok) throw new Error(`サーバーエラー: ${response.status}`);
+      
+      const htmlText = await response.text();
+      oddsData = parseOddsHTML(htmlText);
+      const count = Object.keys(oddsData).length;
+
+      if (count === 0) {
+        status.className = 'status-error';
+        status.textContent = 'オッズを取得できませんでした。（未開催・発売前・締切後の可能性があります）';
+      } else {
+        status.className = 'status-success';
+        status.textContent = `取得成功！ (${count}件のオッズ反映)`;
+        filterAndRender();
+        renderKeepList();
+      }
+    } catch (e) {
+      console.error(e);
+      status.className = 'status-error';
+      status.textContent = 'オッズの取得に失敗しました。';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // 公式サイトHTMLからオッズを抽出するパース関数
+  function parseOddsHTML(htmlText) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlText, "text/html");
+    const parsedOdds = {};
+
+    const oddsTds = doc.querySelectorAll("td.oddsPoint");
+    oddsTds.forEach(td => {
+      const val = td.textContent.trim();
+      if (!val) return;
+
+      let classStr = td.className || "";
+      const parentTr = td.closest("tr");
+      if (parentTr) {
+        classStr += " " + parentTr.className;
+      }
+
+      const match = classStr.match(/p3t_(\d)[\-_]?(\d)[\-_]?(\d)/);
+      if (match) {
+        const key = `${match[1]}-${match[2]}-${match[3]}`;
+        parsedOdds[key] = val;
+      }
+    });
+
+    if (Object.keys(parsedOdds).length === 0) {
+      const trs = doc.querySelectorAll("tr");
+      trs.forEach(tr => {
+        const text = tr.innerText || tr.textContent;
+        const matches = [...text.matchAll(/(\d)\s*[\-\s]\s*(\d)\s*[\-\s]\s*(\d)\s+([\d\.]+)/g)];
+        matches.forEach(m => {
+          const [_, b1, b2, b3, val] = m;
+          if (new Set([b1, b2, b3]).size === 3) {
+            parsedOdds[`${b1}-${b2}-${b3}`] = val;
+          }
         });
-
-        // 2. テーブル全行スキャンによるバックアップ抽出
-        if (Object.keys(oddsData).length === 0) {
-            const trs = doc.querySelectorAll("tr");
-            trs.forEach(tr => {
-                const text = tr.innerText || tr.textContent;
-                const matches = [...text.matchAll(/(\d)\s*[\-\s]\s*(\d)\s*[\-\s]\s*(\d)\s+([\d\.]+)/g)];
-                matches.forEach(m => {
-                    const [_, b1, b2, b3, val] = m;
-                    if (new Set([b1, b2, b3]).size === 3) {
-                        oddsData[`${b1}-${b2}-${b3}`] = val;
-                    }
-                });
-            });
-        }
-
-        return oddsData;
+      });
     }
 
-    function renderOdds(oddsData) {
-        const oddsList = document.getElementById("odds-list");
-        oddsList.innerHTML = "";
+    return parsedOdds;
+  }
 
-        const keys = Object.keys(oddsData).sort();
+  // ----------------------------------------------------
+  // 収支管理機能（localStorage）
+  // ----------------------------------------------------
+  const raceList = document.getElementById('raceList');
+  const addRaceBtn = document.getElementById('addRaceBtn');
+  const clearStorageBtn = document.getElementById('clearStorageBtn');
+  const STORAGE_KEY = 'kyotei_race_data';
 
-        keys.forEach(key => {
-            const card = document.createElement("div");
-            card.className = "odds-card";
-            card.innerHTML = `
-                <div class="kumi">${key}</div>
-                <div class="val">${oddsData[key]}</div>
-            `;
-            oddsList.appendChild(card);
-        });
+  addRaceBtn.addEventListener('click', () => {
+    const currentRows = document.querySelectorAll('.race-item').length;
+    addRaceRow(`${currentRows + 1}R`, '', '');
+    saveData();
+  });
+
+  clearStorageBtn.addEventListener('click', () => {
+    if (confirm('保存されている収支データをすべて削除しますか？')) {
+      localStorage.removeItem(STORAGE_KEY);
+      raceList.innerHTML = '';
+      addRaceRow('1R', '', '');
+      calculateTotal();
     }
+  });
+
+  function addRaceRow(name = '', invest = '', ret = '') {
+    const item = document.createElement('div');
+    item.className = 'race-item';
+    item.innerHTML = `
+      <input type="text" class="race-name-input" value="${name}" placeholder="1R">
+      <input type="number" class="num-input input-invest" value="${invest}" placeholder="投資" min="0" step="100">
+      <input type="number" class="num-input input-return" value="${ret}" placeholder="回収" min="0" step="10">
+      <span class="race-profit plus">0円</span>
+      <button class="btn-del">✕</button>
+    `;
+
+    item.querySelector('.btn-del').addEventListener('click', () => {
+      item.remove();
+      calculateTotal();
+      saveData();
+    });
+
+    item.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', () => {
+        calculateRaceProfit(item);
+        calculateTotal();
+        saveData();
+      });
+    });
+
+    raceList.appendChild(item);
+    calculateRaceProfit(item);
+  }
+
+  function calculateRaceProfit(raceItem) {
+    const invest = Number(raceItem.querySelector('.input-invest').value) || 0;
+    const ret = Number(raceItem.querySelector('.input-return').value) || 0;
+    const profit = ret - invest;
+
+    const profitEl = raceItem.querySelector('.race-profit');
+    profitEl.textContent = `${profit >= 0 ? '+' : ''}${profit.toLocaleString()}円`;
+    profitEl.className = profit >= 0 ? 'race-profit plus' : 'race-profit minus';
+  }
+
+  function calculateTotal() {
+    let totalInvest = 0;
+    let totalReturn = 0;
+
+    document.querySelectorAll('.race-item').forEach(item => {
+      totalInvest += Number(item.querySelector('.input-invest').value) || 0;
+      totalReturn += Number(item.querySelector('.input-return').value) || 0;
+    });
+
+    const totalProfit = totalReturn - totalInvest;
+
+    document.getElementById('totalInvestment').textContent = `${totalInvest.toLocaleString()} 円`;
+    document.getElementById('totalReturn').textContent = `${totalReturn.toLocaleString()} 円`;
+    
+    const profitEl = document.getElementById('totalProfit');
+    profitEl.textContent = `${totalProfit >= 0 ? '+' : ''}${totalProfit.toLocaleString()} 円`;
+    profitEl.className = totalProfit >= 0 ? 'plus' : 'minus';
+  }
+
+  function saveData() {
+    const data = [];
+    document.querySelectorAll('.race-item').forEach(item => {
+      data.push({
+        name: item.querySelector('.race-name-input').value,
+        invest: item.querySelector('.input-invest').value,
+        ret: item.querySelector('.input-return').value
+      });
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function loadData() {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      const data = JSON.parse(savedData);
+      if (data.length > 0) {
+        raceList.innerHTML = '';
+        data.forEach(row => addRaceRow(row.name, row.invest, row.ret));
+        calculateTotal();
+        return;
+      }
+    }
+    addRaceRow('1R', '', '');
+    calculateTotal();
+  }
+
+  // 初期化
+  filterAndRender();
+  renderKeepList();
+  loadData();
 </script>
 
 </body>
