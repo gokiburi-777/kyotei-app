@@ -704,7 +704,8 @@
       delBtn.textContent = '✕';
       item.appendChild(delBtn);
 
-      item.addEventListener('click', () => {
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         keepSet.delete(key);
         renderKeepList();
         saveAppState();
